@@ -43,7 +43,8 @@ class BillingBraintree {
 
 	public function createClient($clientData){
 		$result = Braintree_Customer::create([
-			'firstName' => $clientData['name'],
+			'firstName' => $clientData['first_name'],
+			'lastName' => $clientData['last_name'],
 			'paymentMethodNonce' => $clientData['nonce']
 		]);
 		if ($result->success) {

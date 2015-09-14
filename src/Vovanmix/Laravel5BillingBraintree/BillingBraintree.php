@@ -41,11 +41,16 @@ class BillingBraintree {
 		return $clientToken;
 	}
 
-	public function createClient($clientData){
+	/**
+	 * @param array $customerData
+	 * @return bool
+	 * @throws Exception
+	 */
+	public function createCustomer($customerData){
 		$result = Braintree_Customer::create([
-			'firstName' => $clientData['first_name'],
-			'lastName' => $clientData['last_name'],
-			'paymentMethodNonce' => $clientData['nonce']
+			'firstName' => $customerData['first_name'],
+			'lastName' => $customerData['last_name'],
+			'paymentMethodNonce' => $customerData['nonce']
 		]);
 		if ($result->success) {
 			return $result->customer->id;
@@ -57,6 +62,12 @@ class BillingBraintree {
 		return false;
 	}
 
+	/**
+	 * @param string $customer_id
+	 * @param string $plan_id
+	 * @return bool
+	 * @throws Exception
+	 */
 	public function createSubscription($customer_id, $plan_id){
 		$result = Braintree_Customer::find($customer_id);
 		$the_token = null;

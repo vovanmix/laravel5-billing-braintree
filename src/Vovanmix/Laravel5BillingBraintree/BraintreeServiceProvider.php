@@ -3,11 +3,7 @@
 namespace Vovanmix\Laravel5BillingBraintree;
 
 use Illuminate\Support\ServiceProvider;
-
-use Braintree_Configuration;
-use Braintree_ClientToken;
-
-use Blade;
+use Illuminate\Foundation\AliasLoader;
 
 class BraintreeServiceProvider extends ServiceProvider {
 
@@ -32,7 +28,7 @@ class BraintreeServiceProvider extends ServiceProvider {
 
 		$this->app->booting(function()
 		{
-			$loader = \Illuminate\Foundation\AliasLoader::getInstance();
+			$loader = AliasLoader::getInstance();
 			$loader->alias('Billing', 'Vovanmix\Laravel5BillingBraintree\Facades\Billing');
 		});
 	}

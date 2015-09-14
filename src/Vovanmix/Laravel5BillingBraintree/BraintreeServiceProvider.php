@@ -26,11 +26,13 @@ class BraintreeServiceProvider extends ServiceProvider {
 		    __DIR__.'/../../config/braintree.php' => config_path('billing_braintree.php'),
 		]);
 
-		$this->app->booting(function()
+		$this->app->singleton('BillingBraintree', function($app)
 		{
-			$loader = AliasLoader::getInstance();
-			$loader->alias('Billing', 'Vovanmix\Laravel5BillingBraintree\Facades\Billing');
+			return new BillingBraintree();//$app['config']['AdminMenu']
 		});
+
+		$loader = AliasLoader::getInstance();
+		$loader->alias('Billing', 'Vovanmix\Laravel5BillingBraintree\Facades\Billing');
 	}
 
 	/**

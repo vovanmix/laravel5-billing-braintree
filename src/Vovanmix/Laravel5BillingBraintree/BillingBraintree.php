@@ -137,7 +137,7 @@ class BillingBraintree {
 				$summary['summary'] = $plan->price;
 
 				//add all default add-ons
-				if(!empty($addOns)){
+				if(!empty($plan->addOns)){
 					foreach($plan->addOns as $planAddOn){
 						$summary['addOns'][] = [
 							'name' => $planAddOn->name,
@@ -149,8 +149,8 @@ class BillingBraintree {
 				}
 
 				//add all default discounts
-				if(!empty($discounts)){
-					foreach($plan->discount as $planDiscount){
+				if(!empty($plan->discounts)) {
+					foreach ($plan->discounts as $planDiscount) {
 						$summary['discounts'][] = [
 							'name' => $planDiscount->name,
 							'description' => $planDiscount->description,
@@ -164,17 +164,17 @@ class BillingBraintree {
 			}
 		}
 
-		//add all manually added addons
+		//add all manually added add-ons
 		$SystemAddOns = Braintree_AddOn::all();
 		foreach($addOns as $addOn) {
 			foreach($SystemAddOns as $SystemAddOn){
 				if ($SystemAddOn->id == $addOn) {
 					$summary['addOns'][] = [
-						'name' => $planAddOn->name,
-						'description' => $planAddOn->description,
-						'amount' => $planAddOn->amount
+						'name' => $SystemAddOn->name,
+						'description' => $SystemAddOn->description,
+						'amount' => $SystemAddOn->amount
 					];
-					$summary['summary'] += $planAddOn->amount;
+					$summary['summary'] += $SystemAddOn->amount;
 				}
 			}
 		}

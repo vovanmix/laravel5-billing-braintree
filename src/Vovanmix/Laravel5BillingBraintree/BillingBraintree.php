@@ -54,7 +54,17 @@ class BillingBraintree {
 		$result = Braintree_Customer::create([
 			'firstName' => $customerData['first_name'],
 			'lastName' => $customerData['last_name'],
-			'paymentMethodNonce' => $customerData['nonce']
+			'paymentMethodNonce' => $customerData['nonce'],
+			'creditCard' => [
+				'billingAddress' => [
+					'firstName' => $customerData['first_name'],
+					'lastName' => $customerData['last_name'],
+					'streetAddress' => $customerData['address'],
+					'locality' => $customerData['city'],
+					'region' => $customerData['state'],
+					'postalCode' => $customerData['zip']
+				]
+			]
 		]);
 		if ($result->success) {
 			return $result->customer->id;

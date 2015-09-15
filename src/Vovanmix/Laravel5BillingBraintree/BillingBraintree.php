@@ -11,7 +11,7 @@ use Braintree_AddOn;
 use Braintree_Discount;
 
 use Config;
-use League\Flysystem\Exception;
+use Exception;
 
 class BillingBraintree {
 
@@ -54,8 +54,11 @@ class BillingBraintree {
 		$result = Braintree_Customer::create([
 			'firstName' => $customerData['first_name'],
 			'lastName' => $customerData['last_name'],
-			'paymentMethodNonce' => $customerData['nonce'],
 			'creditCard' => [
+				'paymentMethodNonce' => $customerData['nonce'],
+				'options' => [
+					'verifyCard' => true
+				],
 				'billingAddress' => [
 					'firstName' => $customerData['first_name'],
 					'lastName' => $customerData['last_name'],
@@ -69,8 +72,14 @@ class BillingBraintree {
 		if ($result->success) {
 			return $result->customer->id;
 		} else {
-			foreach($result->errors->deepAll() AS $error) {
-				throw new Exception($error->code . ": " . $error->message . "\n");
+			$errors = $result->errors->deepAll();
+			if(!empty($errors)) {
+				foreach ($errors AS $error) {
+					throw new Exception($error->code . ": " . $error->message . "\n");
+				}
+			}
+			elseif(!empty($result->verification['processorResponseText'])){
+				throw new Exception("Card could not be verified: ".$result->verification['processorResponseText']." \n");
 			}
 		}
 		return false;

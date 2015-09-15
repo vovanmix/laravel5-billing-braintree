@@ -67,10 +67,12 @@ class BillingBraintree {
 	/**
 	 * @param string $customer_id
 	 * @param string $plan_id
+	 * @param array $addOns
+	 * @param array $discounts
 	 * @return bool
 	 * @throws Exception
 	 */
-	public function createSubscription($customer_id, $plan_id){
+	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = []){
 		$result = Braintree_Customer::find($customer_id);
 		$the_token = null;
 		if ($result->success) {
@@ -81,10 +83,30 @@ class BillingBraintree {
 			}
 		}
 
+		$formattedAddOns = [];
+		foreach($addOns as $addOn){
+			$formattedAddOns[] = [
+				'inheritedFromId' => $addOn
+			];
+		}
+
+		$formattedDiscounts = [];
+		foreach($discounts as $discount){
+			$formattedDiscounts[] = [
+				'inheritedFromId' => $discount
+			];
+		}
+
 		$result = Braintree_Subscription::create([
 			'paymentMethodToken' => $the_token,
 			'planId' => $plan_id,
 //			'firstBillingDate' => ''
+			'addOns' => [
+				'add' => $formattedAddOns
+			],
+			'discounts' => [
+				'add' => $formattedDiscounts
+			]
 		]);
 		if ($result->success) {
 			return $result->subscription->id;

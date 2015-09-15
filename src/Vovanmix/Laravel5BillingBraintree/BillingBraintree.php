@@ -7,6 +7,8 @@ use Braintree_ClientToken;
 use Braintree_Customer;
 use Braintree_Subscription;
 use Braintree_Plan;
+use Braintree_AddOn;
+use Braintree_Discount;
 
 use Config;
 use League\Flysystem\Exception;
@@ -124,48 +126,75 @@ class BillingBraintree {
 
 	public function getPlanSummary($plan_id, $addOns = [], $discounts = []){
 
+		$summary = [];
+
 		$plans = Braintree_Plan::all();
+
 		foreach($plans as $plan){
 			if($plan->id == $plan_id){
 				$summary = [];
 				$summary['price'] = $plan->price;
 				$summary['summary'] = $plan->price;
 
+				//add all default add-ons
 				if(!empty($addOns)){
-					foreach($addOns as $addOn){
-						foreach($plan->addOns as $planAddOn){
-							if($planAddOn->id == $addOn){
-								$summary['addOns'][] = [
-									'name' => $planAddOn->name,
-									'description' => $planAddOn->description,
-									'amount' => $planAddOn->amount
-								];
-								$summary['summary'] += $planAddOn->amount;
-							}
-						}
+					foreach($plan->addOns as $planAddOn){
+						$summary['addOns'][] = [
+							'name' => $planAddOn->name,
+							'description' => $planAddOn->description,
+							'amount' => $planAddOn->amount
+						];
+						$summary['summary'] += $planAddOn->amount;
 					}
 				}
 
+				//add all default discounts
 				if(!empty($discounts)){
-					foreach($discounts as $discount){
-						foreach($plan->discount as $planDiscount){
-							if($planDiscount->id == $discount){
-								$summary['discounts'][] = [
-									'name' => $planDiscount->name,
-									'description' => $planDiscount->description,
-									'amount' => $planDiscount->amount
-								];
-								$summary['summary'] -= $planDiscount->amount;
-							}
-						}
+					foreach($plan->discount as $planDiscount){
+						$summary['discounts'][] = [
+							'name' => $planDiscount->name,
+							'description' => $planDiscount->description,
+							'amount' => $planDiscount->amount
+						];
+						$summary['summary'] -= $planDiscount->amount;
 					}
 				}
 
-				return $summary;
+				break;
 			}
 		}
 
-		return null;
+		//add all manually added addons
+		$SystemAddOns = Braintree_AddOn::all();
+		foreach($addOns as $addOn) {
+			foreach($SystemAddOns as $SystemAddOn){
+				if ($SystemAddOn->id == $addOn) {
+					$summary['addOns'][] = [
+						'name' => $planAddOn->name,
+						'description' => $planAddOn->description,
+						'amount' => $planAddOn->amount
+					];
+					$summary['summary'] += $planAddOn->amount;
+				}
+			}
+		}
+
+		//add all manually added discounts
+		$SystemDiscounts = Braintree_Discount::all();
+		foreach($discounts as $discount){
+			foreach($SystemDiscounts as $SystemDiscount){
+				if($SystemDiscount->id == $discount){
+					$summary['discounts'][] = [
+						'name' => $SystemDiscount->name,
+						'description' => $SystemDiscount->description,
+						'amount' => $SystemDiscount->amount
+					];
+					$summary['summary'] -= $SystemDiscount->amount;
+				}
+			}
+		}
+
+		return $summary;
 	}
 
 }

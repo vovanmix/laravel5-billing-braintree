@@ -75,14 +75,12 @@ class BillingBraintree {
 	 * @throws Exception
 	 */
 	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = []){
-		$result = Braintree_Customer::find($customer_id);
+		$customer = Braintree_Customer::find($customer_id);
 		$the_token = null;
-		if ($result->success) {
-			$the_token = $result->customer->paymentMethods[0]->token;
+		if (!empty($customer)) {
+			$the_token = $customer->paymentMethods[0]->token;
 		} else {
-			foreach($result->errors->deepAll() AS $error) {
-				throw new Exception($error->code . ": " . $error->message . "\n");
-			}
+			throw new Exception("Customer not found \n");
 		}
 
 		$formattedAddOns = [];

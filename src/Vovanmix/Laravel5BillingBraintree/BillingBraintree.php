@@ -6,6 +6,8 @@ use Braintree_Configuration;
 use Braintree_ClientToken;
 use Braintree_Customer;
 use Braintree_Subscription;
+use Braintree_Plan;
+
 use Config;
 use League\Flysystem\Exception;
 
@@ -96,6 +98,52 @@ class BillingBraintree {
 
 	public function checkSubscription(){
 
+	}
+
+	public function getPlanSummary($plan_id, $addOns = [], $discounts = []){
+
+		$plans = Braintree_Plan::all();
+		foreach($plans as $plan){
+			if($plan->id == $plan_id){
+				$summary = [];
+				$summary['price'] = $plan->price;
+				$summary['summary'] = $plan->price;
+
+				if(!empty($addOns)){
+					foreach($addOns as $addOn){
+						foreach($plan->addOns as $planAddOn){
+							if($planAddOn->id == $addOn){
+								$summary['addOns'][] = [
+									'name' => $planAddOn->name,
+									'description' => $planAddOn->description,
+									'amount' => $planAddOn->amount
+								];
+								$summary['summary'] += $planAddOn->amount;
+							}
+						}
+					}
+				}
+
+				if(!empty($discounts)){
+					foreach($discounts as $discount){
+						foreach($plan->discount as $planDiscount){
+							if($planDiscount->id == $discount){
+								$summary['addOns'][] = [
+									'name' => $planDiscount->name,
+									'description' => $planDiscount->description,
+									'amount' => $planDiscount->amount
+								];
+								$summary['summary'] -= $planDiscount->amount;
+							}
+						}
+					}
+				}
+
+				return $summary;
+			}
+		}
+
+		return null;
 	}
 
 }

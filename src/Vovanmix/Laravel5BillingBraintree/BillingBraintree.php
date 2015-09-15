@@ -128,7 +128,7 @@ class BillingBraintree {
 					foreach($discounts as $discount){
 						foreach($plan->discount as $planDiscount){
 							if($planDiscount->id == $discount){
-								$summary['addOns'][] = [
+								$summary['discounts'][] = [
 									'name' => $planDiscount->name,
 									'description' => $planDiscount->description,
 									'amount' => $planDiscount->amount

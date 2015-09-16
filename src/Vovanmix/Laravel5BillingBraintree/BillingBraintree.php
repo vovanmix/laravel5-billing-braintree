@@ -161,7 +161,7 @@ class BillingBraintree implements BillingInterface {
 	public function getSubscriptionInfo($subscription_id){
 		$subscription = Braintree_Subscription::find($subscription_id);
 		if(!empty($subscription)){
-			$data = [];
+			$data = new \stdClass();
 			$statuses = [
 				Braintree_Subscription::ACTIVE => 'ACTIVE',
 				Braintree_Subscription::CANCELED => 'CANCELED',
@@ -169,8 +169,8 @@ class BillingBraintree implements BillingInterface {
 				Braintree_Subscription::PAST_DUE => 'PAST_DUE',
 				Braintree_Subscription::PENDING => 'PENDING'
 			];
-			$data['status'] = $statuses[$subscription->status];
-			$data['createdAt'] = $subscription->createdAt;
+			$data->status = $statuses[$subscription->status];
+			$data->createdAt = $subscription->createdAt;
 
 			//todo: get other info
 

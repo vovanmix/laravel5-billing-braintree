@@ -140,8 +140,43 @@ class BillingBraintree implements BillingInterface {
 	}
 
 
-	public function checkActiveSubscription($customer_id){
+	/**
+	 * @param string $subscription_id
+	 * @return boolean
+	 */
+	public function checkIfSubscriptionIsActive($subscription_id){
+		$subscription = Braintree_Subscription::find($subscription_id);
+		if(!empty($subscription)){
+			if($subscription->status != Braintree_Subscription::CANCELED && $subscription->status != Braintree_Subscription::EXPIRED){
+				return true;
+			}
+		}
+		return false;
+	}
 
+	/**
+	 * @param string $subscription_id
+	 * @return mixed
+	 */
+	public function getSubscriptionInfo($subscription_id){
+		$subscription = Braintree_Subscription::find($subscription_id);
+		if(!empty($subscription)){
+			$data = [];
+			$statuses = [
+				Braintree_Subscription::ACTIVE => 'ACTIVE',
+				Braintree_Subscription::CANCELED => 'CANCELED',
+				Braintree_Subscription::EXPIRED => 'EXPIRED',
+				Braintree_Subscription::PAST_DUE => 'PAST_DUE',
+				Braintree_Subscription::PENDING => 'PENDING'
+			];
+			$data['status'] = $statuses[$subscription->status];
+			$data['createdAt'] = $subscription->createdAt;
+
+			//todo: get other info
+
+			return $data;
+		}
+		return false;
 	}
 
 	/**

@@ -28,10 +28,16 @@ interface BillingInterface {
 	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = []);
 
 	/**
-	 * @param string $customer_id
+	 * @param string $subscription_id
+	 * @return boolean
+	 */
+	public function checkIfSubscriptionIsActive($subscription_id);
+
+	/**
+	 * @param string $subscription_id
 	 * @return mixed
 	 */
-	public function checkActiveSubscription($customer_id);
+	public function getSubscriptionInfo($subscription_id);
 
 	/**
 	 * @param string $plan_id

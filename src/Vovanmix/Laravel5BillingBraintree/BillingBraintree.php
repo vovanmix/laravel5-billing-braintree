@@ -13,7 +13,9 @@ use Braintree_Discount;
 use Config;
 use Exception;
 
-class BillingBraintree {
+use Vovanmix\Laravel5BillingBraintree\Interfaces\BillingInterface;
+
+class BillingBraintree implements BillingInterface {
 
 	public function __construct(){
 		Braintree_Configuration::environment(
@@ -137,10 +139,17 @@ class BillingBraintree {
 		return false;
 	}
 
-	public function checkSubscription(){
+
+	public function checkActiveSubscription($customer_id){
 
 	}
 
+	/**
+	 * @param string $plan_id
+	 * @param array $addOns
+	 * @param array $discounts
+	 * @return mixed
+	 */
 	public function getPlanSummary($plan_id, $addOns = [], $discounts = []){
 
 		$summary = [];

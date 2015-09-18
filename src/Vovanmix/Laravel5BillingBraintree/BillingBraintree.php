@@ -80,8 +80,11 @@ class BillingBraintree implements BillingInterface {
 					throw new Exception($error->code . ": " . $error->message . "\n");
 				}
 			}
-			elseif(!empty($result->verification['processorResponseText'])){
+			elseif(!empty($result->verification['processorResponseCode']) && ($result->verification['processorResponseCode'] >= 2000 ) && !empty($result->verification['processorResponseText'])){
 				throw new Exception("Card could not be verified: ".$result->verification['processorResponseText']." \n");
+			}
+			else{
+				throw new Exception("Card could not be processed: ".$result->message." \n");
 			}
 		}
 		return false;

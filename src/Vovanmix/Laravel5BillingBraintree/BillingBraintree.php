@@ -61,6 +61,7 @@ class BillingBraintree implements BillingInterface {
 				'options' => [
 					'verifyCard' => true
 				],
+				//todo: put cardholder name here
 				'billingAddress' => [
 					'firstName' => $customerData['first_name'],
 					'lastName' => $customerData['last_name'],

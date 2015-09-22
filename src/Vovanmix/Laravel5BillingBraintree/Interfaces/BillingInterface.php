@@ -35,6 +35,12 @@ interface BillingInterface {
 
 	/**
 	 * @param string $subscription_id
+	 * @return boolean
+	 */
+	public function checkIfSubscriptionIsEnabled($subscription_id);
+
+	/**
+	 * @param string $subscription_id
 	 * @return mixed
 	 */
 	public function getSubscriptionInfo($subscription_id);

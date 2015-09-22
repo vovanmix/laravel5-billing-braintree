@@ -173,6 +173,21 @@ class BillingBraintree implements BillingInterface {
 		return false;
 	}
 
+
+	/**
+	 * @param string $subscription_id
+	 * @return boolean
+	 */
+	public function checkIfSubscriptionIsPastDue($subscription_id){
+		$subscription = Braintree_Subscription::find($subscription_id);
+		if(!empty($subscription)){
+			if($subscription->status === Braintree_Subscription::PAST_DUE){
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * @param string $subscription_id
 	 * @return mixed

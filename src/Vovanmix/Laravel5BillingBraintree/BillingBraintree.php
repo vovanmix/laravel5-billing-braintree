@@ -50,7 +50,7 @@ class BillingBraintree implements BillingInterface {
 
 	/**
 	 * @param array $customerData
-	 * @return bool
+	 * @return bool | int
 	 * @throws Exception
 	 */
 	public function createCustomer($customerData){
@@ -62,7 +62,7 @@ class BillingBraintree implements BillingInterface {
 				'options' => [
 					'verifyCard' => true
 				],
-				//todo: put cardholder name here
+				//todo: separate client and cardholder names
 				'billingAddress' => [
 					'firstName' => $customerData['first_name'],
 					'lastName' => $customerData['last_name'],
@@ -97,7 +97,7 @@ class BillingBraintree implements BillingInterface {
 	 * @param string $plan_id
 	 * @param array $addOns
 	 * @param array $discounts
-	 * @return bool
+	 * @return bool | int
 	 * @throws Exception
 	 */
 	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = []){
@@ -144,6 +144,47 @@ class BillingBraintree implements BillingInterface {
 		return false;
 	}
 
+	/**
+	 * @param string $subscription_id
+	 * @param array $customerData
+	 * @return bool
+	 * @throws Exception
+	 */
+	public function updatePaymentMethod($subscription_id, $customerData){
+		$subscription = Braintree_Subscription::find($subscription_id);
+		if(!empty($subscription)){
+			$paymentMethod = Braintree_PaymentMethod::find($subscription->paymentMethodToken);
+			if(!empty($paymentMethod)){
+				$result = Braintree_PaymentMethod::update(
+					$paymentMethod->token,
+					[
+						'paymentMethodNonce' => $customerData['nonce'],
+						'options' => [
+							'verifyCard' => true
+						],
+						//todo: separate client and cardholder names
+						'billingAddress' => [
+							'firstName' => $customerData['first_name'],
+							'lastName' => $customerData['last_name'],
+							'streetAddress' => $customerData['address'],
+							'locality' => $customerData['city'],
+							'region' => $customerData['state'],
+							'postalCode' => $customerData['zip']
+						]
+					]
+				);
+
+				if ($result->success) {
+					return true;
+				} else {
+					foreach($result->errors->deepAll() AS $error) {
+						throw new Exception($error->code . ": " . $error->message . "\n");
+					}
+				}
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * @param string $subscription_id

@@ -12,7 +12,7 @@ interface BillingInterface {
 
 	/**
 	 * @param array $customerData
-	 * @return bool
+	 * @return bool | int
 	 * @throws Exception
 	 */
 	public function createCustomer($customerData);
@@ -22,10 +22,18 @@ interface BillingInterface {
 	 * @param string $plan_id
 	 * @param array $addOns
 	 * @param array $discounts
-	 * @return bool
+	 * @return bool | int
 	 * @throws Exception
 	 */
 	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = []);
+
+	/**
+	 * @param string $subscription_id
+	 * @param array $customerData
+	 * @return bool
+	 * @throws Exception
+	 */
+	public function updatePaymentMethod($subscription_id, $customerData);
 
 	/**
 	 * @param string $subscription_id

@@ -47,9 +47,10 @@ interface BillingInterface {
 
 	/**
 	 * @param string $subscription_id
-	 * @return mixed
+	 * @param bool $get_payment_method_info
+	 * @return bool|\stdClass
 	 */
-	public function getSubscriptionInfo($subscription_id);
+	public function getSubscriptionInfo($subscription_id, $get_payment_method_info = true);
 
 	/**
 	 * @param string $plan_id

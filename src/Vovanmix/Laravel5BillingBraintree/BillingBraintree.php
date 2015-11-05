@@ -9,6 +9,7 @@ use Braintree_Subscription;
 use Braintree_Plan;
 use Braintree_AddOn;
 use Braintree_Discount;
+use Braintree_PaymentMethod;
 
 use Config;
 use Exception;
@@ -190,9 +191,10 @@ class BillingBraintree implements BillingInterface {
 
 	/**
 	 * @param string $subscription_id
-	 * @return mixed
+	 * @param bool $get_payment_method_info
+	 * @return bool|\stdClass
 	 */
-	public function getSubscriptionInfo($subscription_id){
+	public function getSubscriptionInfo($subscription_id, $get_payment_method_info = true){
 		$subscription = Braintree_Subscription::find($subscription_id);
 		if(!empty($subscription)){
 			$data = new \stdClass();
@@ -206,7 +208,26 @@ class BillingBraintree implements BillingInterface {
 			$data->status = $statuses[$subscription->status];
 			$data->createdAt = $subscription->createdAt;
 
-			//todo: get other info
+
+			if($get_payment_method_info) {
+				$paymentMethod = Braintree_PaymentMethod::find($subscription->paymentMethodToken);
+
+				$data->payment_method = new \stdClass();
+				$data->payment_method->credit_card = [
+					'type' => $paymentMethod->cardType,
+					'last4' => $paymentMethod->last4,
+					'expiration_month' => $paymentMethod->expirationMonth,
+					'expiration_year' => $paymentMethod->expirationYear
+				];
+				$data->payment_method->billing_address = [
+					'first_name' => $paymentMethod->billingAddress->firstName,
+					'last_name' => $paymentMethod->billingAddress->lastName,
+					'address' => $paymentMethod->billingAddress->streetAddress,
+					'city' => $paymentMethod->billingAddress->locality,
+					'state' => $paymentMethod->billingAddress->region,
+					'zip' => $paymentMethod->billingAddress->postalCode
+				];
+			}
 
 			return $data;
 		}

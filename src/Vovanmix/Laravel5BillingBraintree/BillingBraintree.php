@@ -292,11 +292,11 @@ class BillingBraintree implements BillingInterface {
                 Braintree_Transaction::SETTLEMENT_CONFIRMED     => 'Settlement confirmed'
             ];
             foreach($subscription->transactions as $transaction){
-                $data->transactions[] = [
+                $data->transactions[] = (object)[
                     'status' => $transactionStatuses[ $transaction->status ],
                     'amount' => $transaction->amount,
                     'date' => Carbon::instance($transaction->createdAt),
-                    'credit_card' => [
+                    'credit_card' => (object)[
                         'type' => $transaction->creditCardDetails->cardType,
                         'last4' => $transaction->creditCardDetails->last4
                     ]
@@ -315,13 +315,13 @@ class BillingBraintree implements BillingInterface {
 				$paymentMethod = Braintree_PaymentMethod::find($subscription->paymentMethodToken);
 
 				$data->payment_method = new \stdClass();
-				$data->payment_method->credit_card = [
+				$data->payment_method->credit_card = (object)[
 					'type' => $paymentMethod->cardType,
 					'last4' => $paymentMethod->last4,
 					'expiration_month' => $paymentMethod->expirationMonth,
 					'expiration_year' => $paymentMethod->expirationYear
 				];
-				$data->payment_method->billing_address = [
+				$data->payment_method->billing_address = (object)[
 					'first_name' => $paymentMethod->billingAddress->firstName,
 					'last_name' => $paymentMethod->billingAddress->lastName,
 					'address' => $paymentMethod->billingAddress->streetAddress,

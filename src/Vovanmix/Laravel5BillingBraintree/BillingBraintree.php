@@ -2,14 +2,15 @@
 
 namespace Vovanmix\Laravel5BillingBraintree;
 
-use Braintree_Configuration;
-use Braintree_ClientToken;
-use Braintree_Customer;
-use Braintree_Subscription;
-use Braintree_Plan;
-use Braintree_AddOn;
-use Braintree_Discount;
-use Braintree_PaymentMethod;
+use \Braintree\Configuration as Braintree_Configuration;
+use \Braintree\ClientToken as Braintree_ClientToken;
+use \Braintree\Customer as Braintree_Customer;
+use \Braintree\Subscription as Braintree_Subscription;
+use \Braintree\Transaction as Braintree_Transaction;
+use \Braintree\Plan as Braintree_Plan;
+use \Braintree\AddOn as Braintree_AddOn;
+use \Braintree\Discount as Braintree_Discount;
+use \Braintree\PaymentMethod as Braintree_PaymentMethod;
 
 use Config;
 use Exception;
@@ -233,9 +234,10 @@ class BillingBraintree implements BillingInterface {
 	/**
 	 * @param string $subscription_id
 	 * @param bool $get_payment_method_info
-	 * @return bool|\stdClass
+     * @param int $numberOfTransactions
+	 * @return bool|\stdClass | {status, createdAt, updatedAt, cancelledAt, pastDue, daysPastDue, transactions}
 	 */
-	public function getSubscriptionInfo($subscription_id, $get_payment_method_info = true){
+	public function getSubscriptionInfo($subscription_id, $get_payment_method_info = true, $numberOfTransactions = 5){
 		$subscription = Braintree_Subscription::find($subscription_id);
 		if(!empty($subscription)){
 			$data = new \stdClass();
@@ -248,6 +250,64 @@ class BillingBraintree implements BillingInterface {
 			];
 			$data->status = $statuses[$subscription->status];
 			$data->createdAt = $subscription->createdAt;
+            $data->updatedAt = $subscription->updatedAt; //The date/time the object was last updated. If a subscription has been cancelled, this value will represent the date/time of cancellation.
+
+            if($subscription->status == Braintree_Subscription::CANCELED){
+                $data->cancelledAt = $data->updatedAt;
+            }
+            else{
+                $data->cancelledAt = null;
+            }
+
+            $data->nextBill = new \stdClass();
+            $data->nextBill->date = $subscription->nextBillingDate;
+            $data->nextBill->amount = $subscription->nextBillingPeriodAmount;//String, The total subscription amount for the next billing period. This amount includes add-ons and discounts but does not include the current balance.
+
+            if($subscription->status == Braintree_Subscription::PAST_DUE){
+                $data->pastDue = true;
+                $data->daysPastDue = $subscription->daysPastDue; //int, The number of days that the subscription is past due.
+            }
+            else{
+                $data->pastDue = false;
+                $data->daysPastDue = 0;
+            }
+
+            $data->transactions = [];
+            $i = 0;
+            $transactionStatuses = [
+                Braintree_Transaction::AUTHORIZATION_EXPIRED => 'authorization expired',
+                Braintree_Transaction::AUTHORIZED => 'authorized',
+                Braintree_Transaction::AUTHORIZING => 'authorizing',
+                Braintree_Transaction::GATEWAY_REJECTED         => 'gateway rejected',
+                Braintree_Transaction::FAILED                   => 'failed',
+                Braintree_Transaction::PROCESSOR_DECLINED       => 'processor declined',
+                Braintree_Transaction::SETTLED                  => 'settled',
+                Braintree_Transaction::SETTLING                 => 'settling',
+                Braintree_Transaction::SUBMITTED_FOR_SETTLEMENT => 'submitted for settlement',
+                Braintree_Transaction::VOIDED                   => 'voided',
+                Braintree_Transaction::UNRECOGNIZED             => 'unrecognized',
+                Braintree_Transaction::SETTLEMENT_DECLINED      => 'settlement declined',
+                Braintree_Transaction::SETTLEMENT_PENDING       => 'settlement pending',
+                Braintree_Transaction::SETTLEMENT_CONFIRMED     => 'settlement confirmed'
+            ];
+            foreach($subscription->transactions as $transaction){
+                $data->transactions[] = [
+                    'status' => $transactionStatuses[ $transaction->status ],
+                    'amount' => $transaction->amount,
+                    'date' => $transaction->createdAt,
+                    'credit_card' => [
+                        'type' => $transaction->creditCardDetails->cardType,
+                        'last4' => $transaction->creditCardDetails->last4
+                    ]
+                ];
+
+                $i++;
+                if($i >= $numberOfTransactions){
+                    break;
+                }
+            }
+
+            $subscription->transactions; // Array of Braintree_Transaction objects, Transactions associated with the subscription, sorted by creation date with the most recent first.
 
 
 			if($get_payment_method_info) {

@@ -56,9 +56,10 @@ interface BillingInterface {
 	/**
 	 * @param string $subscription_id
 	 * @param bool $get_payment_method_info
-	 * @return bool|\stdClass
+     * @param int $numberOfTransactions
+	 * @return bool|\stdClass | {status, createdAt, updatedAt, cancelledAt, pastDue, daysPastDue, transactions}
 	 */
-	public function getSubscriptionInfo($subscription_id, $get_payment_method_info = true);
+	public function getSubscriptionInfo($subscription_id, $get_payment_method_info = true, $numberOfTransactions = 5);
 
 	/**
 	 * @param string $plan_id

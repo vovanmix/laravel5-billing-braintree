@@ -12,6 +12,7 @@ use \Braintree\AddOn as Braintree_AddOn;
 use \Braintree\Discount as Braintree_Discount;
 use \Braintree\PaymentMethod as Braintree_PaymentMethod;
 
+use Carbon\Carbon;
 use Config;
 use Exception;
 
@@ -242,18 +243,18 @@ class BillingBraintree implements BillingInterface {
 		if(!empty($subscription)){
 			$data = new \stdClass();
 			$statuses = [
-				Braintree_Subscription::ACTIVE => 'ACTIVE',
-				Braintree_Subscription::CANCELED => 'CANCELED',
-				Braintree_Subscription::EXPIRED => 'EXPIRED',
-				Braintree_Subscription::PAST_DUE => 'PAST_DUE',
-				Braintree_Subscription::PENDING => 'PENDING'
+				Braintree_Subscription::ACTIVE => 'Active',
+				Braintree_Subscription::CANCELED => 'Canceled',
+				Braintree_Subscription::EXPIRED => 'Expired',
+				Braintree_Subscription::PAST_DUE => 'Past due',
+				Braintree_Subscription::PENDING => 'Pending'
 			];
 			$data->status = $statuses[$subscription->status];
-			$data->createdAt = $subscription->createdAt;
-            $data->updatedAt = $subscription->updatedAt; //The date/time the object was last updated. If a subscription has been cancelled, this value will represent the date/time of cancellation.
+			$data->createdAt = Carbon::instance($subscription->createdAt);
+            $data->updatedAt = Carbon::instance($subscription->updatedAt); //The date/time the object was last updated. If a subscription has been cancelled, this value will represent the date/time of cancellation.
 
             if($subscription->status == Braintree_Subscription::CANCELED){
-                $data->cancelledAt = $data->updatedAt;
+                $data->cancelledAt = Carbon::instance($data->updatedAt);
             }
             else{
                 $data->cancelledAt = null;
@@ -275,26 +276,26 @@ class BillingBraintree implements BillingInterface {
             $data->transactions = [];
             $i = 0;
             $transactionStatuses = [
-                Braintree_Transaction::AUTHORIZATION_EXPIRED => 'authorization expired',
-                Braintree_Transaction::AUTHORIZED => 'authorized',
-                Braintree_Transaction::AUTHORIZING => 'authorizing',
-                Braintree_Transaction::GATEWAY_REJECTED         => 'gateway rejected',
-                Braintree_Transaction::FAILED                   => 'failed',
-                Braintree_Transaction::PROCESSOR_DECLINED       => 'processor declined',
-                Braintree_Transaction::SETTLED                  => 'settled',
-                Braintree_Transaction::SETTLING                 => 'settling',
-                Braintree_Transaction::SUBMITTED_FOR_SETTLEMENT => 'submitted for settlement',
-                Braintree_Transaction::VOIDED                   => 'voided',
-                Braintree_Transaction::UNRECOGNIZED             => 'unrecognized',
-                Braintree_Transaction::SETTLEMENT_DECLINED      => 'settlement declined',
-                Braintree_Transaction::SETTLEMENT_PENDING       => 'settlement pending',
-                Braintree_Transaction::SETTLEMENT_CONFIRMED     => 'settlement confirmed'
+                Braintree_Transaction::AUTHORIZATION_EXPIRED => 'Authorization expired',
+                Braintree_Transaction::AUTHORIZED => 'Authorized',
+                Braintree_Transaction::AUTHORIZING => 'Authorizing',
+                Braintree_Transaction::GATEWAY_REJECTED         => 'Gateway rejected',
+                Braintree_Transaction::FAILED                   => 'Failed',
+                Braintree_Transaction::PROCESSOR_DECLINED       => 'Processor declined',
+                Braintree_Transaction::SETTLED                  => 'Settled',
+                Braintree_Transaction::SETTLING                 => 'Settling',
+                Braintree_Transaction::SUBMITTED_FOR_SETTLEMENT => 'Submitted for settlement',
+                Braintree_Transaction::VOIDED                   => 'Voided',
+                Braintree_Transaction::UNRECOGNIZED             => 'Unrecognized',
+                Braintree_Transaction::SETTLEMENT_DECLINED      => 'Settlement declined',
+                Braintree_Transaction::SETTLEMENT_PENDING       => 'Settlement pending',
+                Braintree_Transaction::SETTLEMENT_CONFIRMED     => 'Settlement confirmed'
             ];
             foreach($subscription->transactions as $transaction){
                 $data->transactions[] = [
                     'status' => $transactionStatuses[ $transaction->status ],
                     'amount' => $transaction->amount,
-                    'date' => $transaction->createdAt,
+                    'date' => Carbon::instance($transaction->createdAt),
                     'credit_card' => [
                         'type' => $transaction->creditCardDetails->cardType,
                         'last4' => $transaction->creditCardDetails->last4

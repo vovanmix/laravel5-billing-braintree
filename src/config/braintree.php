@@ -52,5 +52,15 @@ return [
     |
     */
 	'clientSideEncryptionKey' => 'my_client_side_encryption_key',
+
+	/**
+	 * If set to True, Subscriptions with Past Due will be considered Enabled. You have to cancel subscription to them in order to block access
+	 */
+	'allowAccessForPastDue' => true,
+
+	/**
+	 * Grace period is the time before the paid billing cycle will end. If set to True, Cancelled Subscription will be considered Enabled until end of the last billing cycle.
+	 */
+	'allowGracePeriod' => true
 	
 ];

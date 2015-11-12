@@ -20,6 +20,9 @@ use Vovanmix\Laravel5BillingBraintree\Interfaces\BillingInterface;
 
 class BillingBraintree implements BillingInterface {
 
+	private $allowAccessForPastDue;
+	private $allowGracePeriod;
+
 	public function __construct(){
 		Braintree_Configuration::environment(
 			Config::get('billing_braintree.environment')
@@ -37,7 +40,9 @@ class BillingBraintree implements BillingInterface {
 			Config::get('billing_braintree.privateKey')
 		);
 
+		$this->allowAccessForPastDue = Config::get('billing_braintree.allowAccessForPastDue', true);
 
+		$this->allowGracePeriod = Config::get('billing_braintree.allowGracePeriod', true);
 	}
 
 	public function getEncryptionKey(){
@@ -189,6 +194,53 @@ class BillingBraintree implements BillingInterface {
 	}
 
 	/**
+	 * Cancel the subscription and troubleshoot
+	 * @param string $subscription_id
+	 * @return bool
+	 * @throws Exception
+	 */
+	public function cancelSubscription($subscription_id){
+		$result = Braintree_Subscription::cancel($subscription_id);
+		if ($result->success) {
+			return true;
+		} else {
+			foreach($result->errors->deepAll() AS $error) {
+				throw new Exception($error->code . ": " . $error->message . "\n");
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @param Braintree_Subscription $subscription
+	 * @return \stdClass
+	 */
+	protected function getGracePeriodFromSubscriptionInstance(Braintree_Subscription $subscription){
+		$gracePeriod = new \stdClass();
+		if($subscription->status === Braintree_Subscription::CANCELED) {
+			if ($this->allowGracePeriod) {
+				if (empty($subscription->daysPastDue)) {
+					$paidThroughDate = Carbon::instance($subscription->paidThroughDate);
+					if ($paidThroughDate->gt(Carbon::now())) {
+						$gracePeriod->active = true;
+						$gracePeriod->paidThroughDate = $paidThroughDate;
+//						billingPeriodEndDate
+//						billingPeriodStartDate
+						return $gracePeriod;
+					}
+				}
+			}
+		}
+		$gracePeriod->active = false;
+		return $gracePeriod;
+	}
+
+	/**
+	 * Active means that subscription can be used in the future. Canceled and Expired subscriptions cannot be updated.
+	 * Returns True for the following states:
+	 * 	- ACTIVE
+	 *  - PAST_DUE
+	 *  - PENDING
 	 * @param string $subscription_id
 	 * @return boolean
 	 */
@@ -204,10 +256,41 @@ class BillingBraintree implements BillingInterface {
 
 
 	/**
+	 * Enabled means that user can still use subscription
+	 * Returns True for the following states:
+	 * 	- ACTIVE
+	 *  - CANCELED (until grace period ends)
+	 *  - PAST_DUE (if allowed so by config)
 	 * @param string $subscription_id
 	 * @return boolean
 	 */
 	public function checkIfSubscriptionIsEnabled($subscription_id){
+		$subscription = Braintree_Subscription::find($subscription_id);
+		if(!empty($subscription)){
+			if($subscription->status === Braintree_Subscription::ACTIVE){
+				return true;
+			}
+			if($subscription->status === Braintree_Subscription::CANCELED){
+				$gracePeriod = $this->getGracePeriodFromSubscriptionInstance($subscription);
+				return $gracePeriod->active;
+			}
+			if($subscription->status === Braintree_Subscription::PAST_DUE && $this->allowAccessForPastDue){
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	/**
+	 * Paid means that this user in not owe money for now
+	 * Returns True for the following states:
+	 * 	- ACTIVE
+	 *  - PENDING
+	 * @param string $subscription_id
+	 * @return boolean
+	 */
+	public function checkIfSubscriptionIsPaid($subscription_id){
 		$subscription = Braintree_Subscription::find($subscription_id);
 		if(!empty($subscription)){
 			if($subscription->status === Braintree_Subscription::ACTIVE || $subscription->status === Braintree_Subscription::PENDING){
@@ -259,6 +342,8 @@ class BillingBraintree implements BillingInterface {
             else{
                 $data->cancelledAt = null;
             }
+
+			$data->gracePeriod = $this->getGracePeriodFromSubscriptionInstance($subscription);
 
             $data->nextBill = new \stdClass();
             $data->nextBill->date = $subscription->nextBillingDate;

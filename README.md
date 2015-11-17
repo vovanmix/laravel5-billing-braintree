@@ -29,7 +29,7 @@ Then open `config/billing_braintree.php` to setup your environment and keys
 
     Billing::getClientToken()
     
-To use insibe Blade template:
+To use inside Blade template:
 
     {{ Billing::getClientToken() }}
     
@@ -109,7 +109,7 @@ Returns True for the following states:
 ### Paid
     \Billing::checkIfSubscriptionIsPaid($subscriptionId);
 
-Paid means that this user in not owe money for now
+Paid means that this user doesn't owe money for now
 
 Returns True for the following states:
 
@@ -128,7 +128,7 @@ If it is enabled, after cancelling subscription user can use the subscription un
 
 The ability to use the subscription means that `checkIfSubscriptionIsEnabled()` method will return `TRUE`.
 
-#Past Due handling
+##Past Due handling
 By default subscriptions with Past Due will be considered Enabled. You have to cancel subscription to them in order to block access
 
 It can be changed in config, parameter `allowAccessForPastDue`.

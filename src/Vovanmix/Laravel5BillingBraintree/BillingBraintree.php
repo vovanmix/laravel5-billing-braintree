@@ -104,10 +104,12 @@ class BillingBraintree implements BillingInterface {
 	 * @param string $plan_id
 	 * @param array $addOns
 	 * @param array $discounts
+	 * @param array $removeAddOns
+	 * @param array $removeDiscounts
 	 * @return bool | int
 	 * @throws Exception
 	 */
-	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = []){
+	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = [], $removeAddOns = [], $removeDiscounts = []){
 		$customer = Braintree_Customer::find($customer_id);
 		$the_token = null;
 		if (!empty($customer)) {
@@ -135,10 +137,12 @@ class BillingBraintree implements BillingInterface {
 			'planId' => $plan_id,
 //			'firstBillingDate' => ''
 			'addOns' => [
-				'add' => $formattedAddOns
+				'add' => $formattedAddOns,
+				'remove' => $removeAddOns
 			],
 			'discounts' => [
-				'add' => $formattedDiscounts
+				'add' => $formattedDiscounts,
+				'remove' => $removeDiscounts
 			]
 		]);
 		if ($result->success) {
@@ -425,9 +429,11 @@ class BillingBraintree implements BillingInterface {
 	 * @param string $plan_id
 	 * @param array $addOns
 	 * @param array $discounts
+	 * @param array $removeAddOns
+	 * @param array $removeDiscounts
 	 * @return mixed
 	 */
-	public function getPlanSummary($plan_id, $addOns = [], $discounts = []){
+	public function getPlanSummary($plan_id, $addOns = [], $discounts = [], $removeAddOns = [], $removeDiscounts = []){
 
 		$summary = [];
 
@@ -442,24 +448,28 @@ class BillingBraintree implements BillingInterface {
 				//add all default add-ons
 				if(!empty($plan->addOns)){
 					foreach($plan->addOns as $planAddOn){
-						$summary['addOns'][] = [
-							'name' => $planAddOn->name,
-							'description' => $planAddOn->description,
-							'amount' => $planAddOn->amount
-						];
-						$summary['summary'] += $planAddOn->amount;
+						if(!in_array($planAddOn->id, $removeAddOns)) {
+							$summary['addOns'][] = [
+								'name' => $planAddOn->name,
+								'description' => $planAddOn->description,
+								'amount' => $planAddOn->amount
+							];
+							$summary['summary'] += $planAddOn->amount;
+						}
 					}
 				}
 
 				//add all default discounts
 				if(!empty($plan->discounts)) {
 					foreach ($plan->discounts as $planDiscount) {
-						$summary['discounts'][] = [
-							'name' => $planDiscount->name,
-							'description' => $planDiscount->description,
-							'amount' => $planDiscount->amount
-						];
-						$summary['summary'] -= $planDiscount->amount;
+						if(!in_array($planDiscount->id, $removeDiscounts)) {
+							$summary['discounts'][] = [
+								'name' => $planDiscount->name,
+								'description' => $planDiscount->description,
+								'amount' => $planDiscount->amount
+							];
+							$summary['summary'] -= $planDiscount->amount;
+						}
 					}
 				}
 
@@ -499,5 +509,17 @@ class BillingBraintree implements BillingInterface {
 
 		return $summary;
 	}
+
+//	//todo: not sure that we need that
+//	public function cloneSubscription($subscription_id){
+//		$subscription = Braintree_Subscription::find($subscription_id);
+//		if(!empty($subscription)){
+//
+//			//todo
+//
+//			$new_subscription_id = $this->createSubscription($customer_id, $plan_id, $addOns, $discounts);
+//		}
+//		return false;
+//	}
 
 }

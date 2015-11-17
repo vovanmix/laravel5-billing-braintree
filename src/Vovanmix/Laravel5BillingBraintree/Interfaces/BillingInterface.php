@@ -22,10 +22,12 @@ interface BillingInterface {
 	 * @param string $plan_id
 	 * @param array $addOns
 	 * @param array $discounts
+	 * @param array $removeAddOns
+	 * @param array $removeDiscounts
 	 * @return bool | int
 	 * @throws Exception
 	 */
-	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = []);
+	public function createSubscription($customer_id, $plan_id, $addOns = [], $discounts = [], $removeAddOns = [], $removeDiscounts = []);
 
 	/**
 	 * @param string $subscription_id
@@ -55,6 +57,12 @@ interface BillingInterface {
 
 	/**
 	 * @param string $subscription_id
+	 * @return boolean
+	 */
+	public function checkIfSubscriptionIsPaid($subscription_id);
+
+	/**
+	 * @param string $subscription_id
 	 * @param bool $get_payment_method_info
      * @param int $numberOfTransactions
 	 * @return bool|\stdClass | {status, createdAt, updatedAt, cancelledAt, pastDue, daysPastDue, transactions}
@@ -65,8 +73,10 @@ interface BillingInterface {
 	 * @param string $plan_id
 	 * @param array $addOns
 	 * @param array $discounts
+	 * @param array $removeAddOns
+	 * @param array $removeDiscounts
 	 * @return mixed
 	 */
-	public function getPlanSummary($plan_id, $addOns = [], $discounts = []);
+	public function getPlanSummary($plan_id, $addOns = [], $discounts = [], $removeAddOns = [], $removeDiscounts = []);
 
 }

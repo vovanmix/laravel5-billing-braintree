@@ -62,6 +62,13 @@ interface BillingInterface {
 	public function checkIfSubscriptionIsPaid($subscription_id);
 
 	/**
+	 * Returns true if there was at least one successful payment in this subscription
+	 * @param string $subscription_id
+	 * @return bool
+	 */
+	public function checkIfSubscriptionWasSuccessfullyBilled($subscription_id);
+
+	/**
 	 * @param string $subscription_id
 	 * @param bool $get_payment_method_info
      * @param int $numberOfTransactions

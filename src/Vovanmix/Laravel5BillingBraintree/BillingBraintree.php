@@ -287,7 +287,7 @@ class BillingBraintree implements BillingInterface {
 
 
 	/**
-	 * Paid means that this user in not owe money for now
+	 * Paid means that this user doesn`t owe money for now
 	 * Returns True for the following states:
 	 * 	- ACTIVE
 	 *  - PENDING
@@ -304,6 +304,20 @@ class BillingBraintree implements BillingInterface {
 		return false;
 	}
 
+	/**
+	 * Returns true if there was at least one successful payment in this subscription
+	 * @param string $subscription_id
+	 * @return bool
+	 */
+	public function checkIfSubscriptionWasSuccessfullyBilled($subscription_id){
+		$subscription = Braintree_Subscription::find($subscription_id);
+		if(!empty($subscription)){
+			if($subscription->currentBillingCycle > 0){
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * @param string $subscription_id
@@ -348,6 +362,9 @@ class BillingBraintree implements BillingInterface {
             }
 
 			$data->gracePeriod = $this->getGracePeriodFromSubscriptionInstance($subscription);
+
+			$data->currentBillingCycle = $subscription->currentBillingCycle;
+			$data->successfullyBilled = ($data->currentBillingCycle > 0);
 
             $data->nextBill = new \stdClass();
             $data->nextBill->date = $subscription->nextBillingDate;

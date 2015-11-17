@@ -37,7 +37,9 @@ To use inside Blade template:
     $planExternalId = 'test';
     $planAddOns = [1, 2]; // IDs of  add ons, optional
     $planDiscounts = [1, 2]; // IDs of discounts, optional
-    $summary = \Billing::getPlanSummary($planExternalId, $planAddOns, $planDiscounts);
+    $removeAddOns = [3, 4]; // IDs of add ons that default for this plan but needed to be removed from it, optional
+    $removeDiscounts = [3, 4]; // IDs of discounts that default for this plan but needed to be removed from it, optional
+    $summary = \Billing::getPlanSummary($planExternalId, $planAddOns, $planDiscounts, $removeAddOns, $removeDiscounts);
     
 ## Create customer
     $messageBag = new MessageBag();    // catching errors is optional but is a good practice
@@ -62,7 +64,9 @@ To use inside Blade template:
         $planExternalId = 'test';
         $planAddOns = [1, 2]; // IDs of  add ons, optional
         $planDiscounts = [1, 2]; // IDs of discounts, optional
-        $subscriptionId = \Billing::createSubscription($customerId, $planExternalId, $planAddOns, $planDiscounts);
+        $removeAddOns = [3, 4]; // IDs of add ons that default for this plan but needed to be removed from it, optional
+        $removeDiscounts = [3, 4]; // IDs of discounts that default for this plan but needed to be removed from it, optional
+        $subscriptionId = \Billing::createSubscription($customerId, $planExternalId, $planAddOns, $planDiscounts, $removeAddOns, $removeDiscounts);
     } catch (\Exception $e){    
         $messageBag->add('error', $e->getMessage());        
     }
@@ -106,6 +110,10 @@ Returns True for the following states:
 + PAST_DUE
 + PENDING
 
+### Successfully Billed
+    \Billing::checkIfSubscriptionWasSuccessfullyBilled($subscriptionId)
+Returns true if there was at least one successful payment in this subscription
+
 ### Paid
     \Billing::checkIfSubscriptionIsPaid($subscriptionId);
 
@@ -116,7 +124,7 @@ Returns True for the following states:
 + ACTIVE
 + PENDING
 
-### PastDue
+### Past Due
     \Billing::checkIfSubscriptionIsPastDue($subscriptionId);
     
 Returns true if the subscription is past due

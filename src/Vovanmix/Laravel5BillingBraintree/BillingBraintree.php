@@ -224,13 +224,15 @@ class BillingBraintree implements BillingInterface {
 		if($subscription->status === Braintree_Subscription::CANCELED) {
 			if ($this->allowGracePeriod) {
 				if (empty($subscription->daysPastDue)) {
-					$paidThroughDate = Carbon::instance($subscription->paidThroughDate);
-					if ($paidThroughDate->gt(Carbon::now())) {
-						$gracePeriod->active = true;
-						$gracePeriod->paidThroughDate = $paidThroughDate;
-//						billingPeriodEndDate
-//						billingPeriodStartDate
-						return $gracePeriod;
+					if(!empty($subscription->paidThroughDate)) {
+						$paidThroughDate = Carbon::instance($subscription->paidThroughDate);
+						if ($paidThroughDate->gt(Carbon::now())) {
+							$gracePeriod->active = true;
+							$gracePeriod->paidThroughDate = $paidThroughDate;
+//							billingPeriodEndDate
+//							billingPeriodStartDate
+							return $gracePeriod;
+						}
 					}
 				}
 			}

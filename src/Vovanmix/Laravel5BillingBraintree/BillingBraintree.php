@@ -156,6 +156,65 @@ class BillingBraintree implements BillingInterface {
 	}
 
 	/**
+	 * @param string $customerData
+	 * @param float $price
+	 * @return bool | int
+	 * @throws Exception
+	 */
+	public function createPurchase($customerData, $price){
+		$result = Braintree_Transaction::sale([
+			'amount' => $price,
+			'paymentMethodNonce' => $customerData['nonce'],
+			'billing' => [
+				'firstName' => $customerData['first_name'],
+				'lastName' => $customerData['last_name'],
+				'streetAddress' => $customerData['address'],
+				'locality' => $customerData['city'],
+				'region' => $customerData['state'],
+				'postalCode' => $customerData['zip']
+			],
+			'options' => [
+				'submitForSettlement' => True
+			]
+		]);
+
+		if ($result->success) {
+			return $result->transaction->id;
+		} else {
+			foreach($result->errors->deepAll() AS $error) {
+				throw new Exception($error->code . ": " . $error->message . "\n");
+			}
+		}
+		return false;
+
+		/**
+		 * $result->success
+		# true
+
+		$result->transaction->status
+		# e.g. 'submitted_for_settlement'
+
+		$result->transaction->type
+		 */
+
+		/**
+		"authorization_expired"
+		"authorized"
+		"authorizing"
+		"settlement_pending"
+		"settlement_confirmed"
+		"settlement_declined"
+		"failed"
+		"gateway_rejected"
+		"processor_declined"
+		"settled"
+		"settling"
+		"submitted_for_settlement"
+		"voided"
+		 */
+	}
+
+	/**
 	 * @param string $subscription_id
 	 * @param array $customerData
 	 * @return bool
